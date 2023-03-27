@@ -1,0 +1,33 @@
+pipeline {
+    agent { label 'master' }
+    environment {
+        VER = VersionNumber([versionNumberString : '${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}.ARTECH${BUILDS_ALL_TIME}', projectStartDate : '2019-8-27']);
+        imageName = "artech";
+        dockerRegistry = "tulasiaws123"
+    }
+    stages {
+
+        stage('SCM') {
+            steps {
+                script{
+                    currentBuild.displayName = VER
+                }
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'peddaraj', url: 'https://github.com/peddarajugolla1992/artifactory-docker-examples.git']]])
+            }    
+        }//end SCM
+
+        stage ('Docker Build & Push') {            
+            steps {
+                    sh """
+                        pwd
+                        ls
+                        sudo docker login -u peddaraj -p 886862710
+                        sudo docker build -t $dockerRegistry/$imageName:$VER  --pull .
+                        sudo docker push $dockerRegistry/$imageName:$VER
+                    """         
+            }
+        }//end build
+        
+  
+
+}//end pipeline 
